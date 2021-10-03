@@ -1,0 +1,18 @@
+- clean up REST code and objects to use better attr names
+- make switch page pretty
+- add EDIT page that submits values back to the REST service
+- EDIT rest service (POST?) that takes values, compares against the
+  current data, then only updates which fields have changed (use version numbers)
+- update database to have a value_latest table that has a list of all the current
+  fields for each switch, and when updates occur the old fields get pushed to
+	another new table values_history.  Should also keep track of which user
+	provided the value for each field and when.
+- add database table for references that links back to a field and its specific
+  version.
+- update CREATE and EDIT pages to store references
+- figure out how to version references (if at all), or should I use the same
+  table setup as values?
+- allow users to create accounts, login, and logout
+- allow users to use google to login (expand to facebook, twitter, and apple in the future?)
+- add legend to sliders
+- add description field to switch page
