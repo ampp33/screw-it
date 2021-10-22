@@ -3,22 +3,18 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-2">
-					<label class="{ 'col-form-label' : !readOnly }">{{ field.name }}:</label>
+					<label class="col-form-label">{{ field.name }}:</label>
 				</div>
-				<!-- read-only elements for viewing switch values only -->
-				<div class="col-2" v-if="readOnly">
-					<div v-if="isText || isSelect">{{ value }}</div>
-					<input class="form-range" v-if="isSlider" type="range" v-model="value" disabled="true" />
-					<input type="color" class="form-control form-control-color" v-if="isColor" v-model="value" disabled="true" >
-				</div>
-				<!-- non-read-only elements for editing switch values -->
-				<div class="col-2" v-if="!readOnly">
+				<div class="col-2">
 					<select class="form-select" v-if="isSelect" v-model="value" @change="propagateChanges">
 						<option v-for="choice in field.options" :key="choice">{{choice}}</option>
 					</select>
 					<input type="color" class="form-control form-control-color" v-if="isColor" v-model="value" @change="propagateChanges" >
 					<input class="form-control" v-if="isText" :type="inputType" v-model="value" @change="propagateChanges" />
 					<input class="form-range" v-if="isSlider" type="range" v-model="value" @change="propagateChanges" />
+					<div v-if="isBoolean" class="pad-top">
+						<input class="form-check-input" type="checkbox" v-model="value" @change="propagateChanges">
+					</div>
 				</div>
 				<div class="col-1">
 					<button type="button" class="btn btn-secondary" @click="toggleReferences" aria-label="Mute">
@@ -47,7 +43,7 @@
 
 <script>
 export default {
-	props: [ 'field', 'readOnly' ],
+	props: [ 'field' ],
 	data() {
 		return {
 			value: '',
@@ -58,6 +54,7 @@ export default {
 	created() {
 		this.value = this.field.value;
 		this.references = this.field.references;
+		// set default value for color to avoid warnings in console
 	},
 	computed: {
 		isSelect() {
@@ -67,10 +64,14 @@ export default {
 			return this.field.type === 'color';
 		},
 		isText() {
-			return this.field.type === 'text' || (!this.isSelect && !this.isColor && !this.isSlider);
+			return this.field.type === 'text'
+							|| this.field.type === 'number';
 		},
 		isSlider() {
 			return this.field.type === 'slider';
+		},
+		isBoolean() {
+			return this.field.type === 'boolean';
 		},
 		inputType() {
 			if(this.field.type) return this.field.type;
@@ -105,7 +106,10 @@ export default {
 </script>
 
 <style>
-.row {
-	padding: 5px;
-}
+	.row {
+		padding: 5px;
+	}
+	.pad-top {
+		padding-top: 7px;
+	}
 </style>

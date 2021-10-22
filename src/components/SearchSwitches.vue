@@ -1,22 +1,68 @@
 <template>
 	<div>
-		<h1>Switches</h1>
-		<table class="table table-hover">
-			<thead>
-				<tr>
-					<th></th>
-					<th v-for="colName in displayColumns" :key="colName" scope="col">{{ colName }}</th>
-				</tr>
-			</thead>
-		<tbody>
-			<tr v-for="s in switches" :key="s.switch_id">
-				<td><a :href="'/view?switch_id=' + s.switch_id"><i class="bi-box-arrow-in-left"></i></a></td>
-				<td v-for="colName in displayColumns" :key="s.switch_id + ':' + colName" scope="col">
-					{{ getValue(s, colName) }}
-				</td>
-			</tr>
-		</tbody>
-		</table>
+		<h1>Search</h1>
+		<div class="container-fluid no-padding no-margin" style="width: 100%">
+			<div class="row">
+				<div class="col-2 no-padding">
+					<div class="accordion">
+						<div class="accordion-item">
+							<h2 class="accordion-header">
+								<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
+									Name
+								</button>
+							</h2>
+							<div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+								<div class="accordion-body">
+									Search fields here
+								</div>
+							</div>
+						</div>
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+								<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+									Switch Type
+								</button>
+							</h2>
+							<div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingTwo">
+								<div class="accordion-body">
+									MORE Search fields here
+								</div>
+							</div>
+						</div>
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="panelsStayOpen-headingThree">
+								<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+									Manufacturer
+								</button>
+							</h2>
+							<div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingThree">
+								<div class="accordion-body">
+									EVEN MORE Search fields here
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-10">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th></th>
+								<th v-for="col in displayColumns" :key="col.key" scope="col">{{ col.display }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="s in switches" :key="s.switch_id">
+								<td><a :href="'/view?switch_id=' + s.switch_id"><i class="bi-box-arrow-in-left"></i></a></td>
+								<td v-for="col in displayColumns" :key="s.switch_id + ':' + col.key" scope="col">
+									{{ getValue(s, col.key) }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -25,43 +71,23 @@ export default {
 	data() {
 		return {
 			displayColumns: [
-				'Manufacturer',
-				'Name',
-				'Type',
-				'Mount',
-				'Top Material',
-				'Bottom Material',
-				'Stem Material',
-				'Operating (g)',
-				'Actuation (mm)',
-				'Total Travel (mm)'
+				{ key: 'manufacturer', display: 'Manufacturer' },
+				{ key: 'name', display: 'Name' },
+				{ key: 'type', display: 'Type' },
+				{ key: 'mount', display: 'Mount' },
+				{ key: 'top_material', display: 'Top Material' },
+				{ key: 'bottom_material', display: 'Bottom Material' },
+				{ key: 'stem_material', display: 'Stem Material' },
+				{ key: 'actuation_weight', display: 'Operating (g)' },
+				{ key: 'pre_travel', display: 'Actuation (mm)' },
+				{ key: 'total_travel', display: 'Total Travel (mm)' }
 			],
 			switches: []
 		}
 	},
 	methods: {
 		getValue: function(s, fieldName) {
-			return (s.fields.find(field => field.name === fieldName)).value;
-		},
-		simplifySwitchList(switchData) {
-			var result = [];
-			for(const s of switchData) {
-				const currentSwitch = {
-					switch_id: s.switch_id,
-					fields: []
-				};
-				result.push(currentSwitch);
-				for(const cat of s.switchCategories) {
-					for(const field of cat.fields) {
-						currentSwitch.fields.push({
-							field_id: field.field_id,
-							name: field.name,
-							value: field.value
-						});
-					}
-				}
-			}
-			return result;
+			return s[fieldName];
 		}
 	},
 	beforeMount() {
@@ -69,7 +95,7 @@ export default {
 		fetch('http://localhost:8081/api/search')
 		.then(res => res.json())
 		.then(data => {
-			self.switches = self.simplifySwitchList(data);
+			self.switches = data;
 		});
 	}
 }
