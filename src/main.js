@@ -26,6 +26,7 @@ const router = createRouter({
     },
 		{
 			path: '/search',
+      alias: ['/'],
       name: 'SearchSwitches',
       component: SearchSwitches
 		}

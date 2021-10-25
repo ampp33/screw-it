@@ -131,6 +131,7 @@
 					</div>
 				</div>
 				<button type="submit" class="btn btn-primary" @click.stop.prevent="createSwitch">Create</button>
+				<button type="submit" class="btn btn-warning" @click.stop.prevent="doStuff">Stuff</button>
 			</div>
 	</form>
 </template>
@@ -142,7 +143,12 @@ export default {
 	},
 	data() {
 		return {
-			switchData: {},
+			switchData: {
+				// set initial color values
+				top_color: '#000000',
+				bottom_color: '#000000',
+				stem_color: '#000000',
+			},
 			image: false,
 			plasticMaterials: [
 				'ABS',
@@ -187,8 +193,10 @@ export default {
 			}
 			return output;
 		},
+		doStuff() {
+			this.getPurchasingDataAsArray(this.switchData);
+		},
 		createSwitch() {
-			console.log(this.switchData);
 			var fullSwitchData = {};
 			// copy all properties over to the new object we'll submit to the API
 			Object.assign(fullSwitchData, this.switchData);
@@ -202,6 +210,8 @@ export default {
 			fullSwitchData.images = [
 				{
 					data: this.image,
+					// TODO replace this with the actual file name (because we need the ext)
+					file_name: 'blah.jpg',
 					is_primary: 1
 				}
 			];
@@ -213,7 +223,7 @@ export default {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					switchData: JSON.stringify(self.switchData),
+					switchData: fullSwitchData,
 					userId: 'ampp33'
 				})
 			})
