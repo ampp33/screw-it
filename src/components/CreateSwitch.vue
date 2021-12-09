@@ -6,7 +6,7 @@
 					<div class="col-md-auto">
 						<label class="mb-3 img-upload">
 							<input class="hidden" type="file" accept="image/png, image/jpeg" @change="fileSpecified">
-							<div class="img-upload-icon" v-if="!image">
+							<div class="img-upload-icon" v-if="!images || images.length == 0">
 								<svg width="100%" fill="#0d6efd" viewBox="0 0 16 16">
 									<path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
 									<path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13zm13 1a.5.5 0 0 1 .5.5v6l-3.775-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12v.54A.505.505 0 0 1 1 12.5v-9a.5.5 0 0 1 .5-.5h13z"/>
@@ -15,7 +15,7 @@
 									Upload Image
 								</div>
 							</div>
-							<img v-else height="300" width="300" :src="image" />
+							<img v-else height="300" width="300" :src="derp" />
 						</label>
 					</div>
 					<div class="col">
@@ -149,7 +149,8 @@ export default {
 				bottom_color: '#000000',
 				stem_color: '#000000',
 			},
-			image: false,
+			images: [],
+			derp: false,
 			plasticMaterials: [
 				'ABS',
 				'Polycarbonate (PC)',
@@ -166,13 +167,17 @@ export default {
 			var files = event.target.files || event.dataTransfer.files;
 			if (!files.length)
 				return;
-			var reader = new FileReader();
+
+			var image = files[0];
+			this.images.push(image);
 
 			const self = this;
+			var reader = new FileReader();
 			reader.onload = (e) => {
-				self.image = e.target.result;
+				self.derp = e.target.result;
 			};
-			reader.readAsDataURL(files[0]);
+
+			reader.readAsDataURL(image);
 		},
 		getPurchasingDataAsArray() {
 			var output = [];
@@ -206,33 +211,50 @@ export default {
 			if(fullSwitchData.references) {
 				fullSwitchData.references = fullSwitchData.references.split(/\n/);
 			}
-			// attach an image to the switch object
-			fullSwitchData.images = [
-				{
-					data: this.image,
-					// TODO replace this with the actual file name (because we need the ext)
-					file_name: 'blah.jpg',
-					is_primary: 1
-				}
-			];
 
 			var self = this;
-			fetch('http://localhost:8081/api/switch', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					switchData: fullSwitchData,
-					userId: 'ampp33'
-				})
+			// upload switch image
+			const formData = new FormData()
+			formData.append('images', [ this.images ]);
+			new Promise((resolve) => {
+					console.log('beginning switch creation process...');
+					resolve();
 			})
-			.then(res => {
-				console.log('attempted to create switch, response: ' + res.status);
-				if(res.status === 200) {
-					// redirect to main switch list
-					self.$router.push('/search');
-				}
+			.then(() => {
+				return fetch('http://localhost:8081/api/upload', {
+						method: 'POST',
+						headers: { 'Content-Type': 'multipart/form-data' },
+						body: formData
+					})
+					.then(response => response.json())
+					.then(data => {
+						fullSwitchData.images = data.images;
+						if(fullSwitchData.images && fullSwitchData.images.length > 0) {
+							// mark the first image as primary
+							fullSwitchData.images[0].is_primary = 1;
+						}
+					});
+			})
+			.then(() => {
+				// upload switch data
+				return fetch('http://localhost:8081/api/switch', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						switchData: fullSwitchData,
+						userId: 'ampp33'
+					})
+				});
+			})
+			.then(() => {
+				// redirect to main switch list
+				self.$router.push('/search');
+			})
+			.catch(error => {
+				console.log(error);
+				// TODO show some sort of error and stop processing
 			});
 		}
 	}
