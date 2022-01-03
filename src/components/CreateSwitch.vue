@@ -213,30 +213,30 @@ export default {
 			}
 
 			var self = this;
-			// upload switch image
-			const formData = new FormData()
-			formData.append('images', [ this.images ]);
-			new Promise((resolve) => {
-					console.log('beginning switch creation process...');
-					resolve();
+
+			// prep switch image data for API call
+			const formData = new FormData();
+			for (const image of this.images) {
+					formData.append('images', image);
+      }
+
+			// begin chain of calling API methods to create the new switch
+			fetch('http://localhost:8081/api/upload', {
+				method: 'POST',
+				body: formData
 			})
-			.then(() => {
-				return fetch('http://localhost:8081/api/upload', {
-						method: 'POST',
-						headers: { 'Content-Type': 'multipart/form-data' },
-						body: formData
-					})
-					.then(response => response.json())
-					.then(data => {
-						fullSwitchData.images = data.images;
-						if(fullSwitchData.images && fullSwitchData.images.length > 0) {
-							// mark the first image as primary
-							fullSwitchData.images[0].is_primary = 1;
-						}
+			.then(response => response.json())
+			.then(data => {
+				fullSwitchData.images = [];
+				for(var i = 0; i < data.length; i++) {
+					fullSwitchData.images.push({
+						file_name: data[i],
+						is_primary: (i === 0 ? 1 : 0)
 					});
+				}
 			})
 			.then(() => {
-				// upload switch data
+				// create switch
 				return fetch('http://localhost:8081/api/switch', {
 					method: 'POST',
 					headers: {
