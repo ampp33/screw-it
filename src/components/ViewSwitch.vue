@@ -89,10 +89,9 @@
 							</div>
 						</div>
 						<div class="tab-pane fade" id="purchasing" role="tabpanel" aria-labelledby="purchasing-tab">
-							<label for="sitesandprices" class="form-label">Seller Sites</label>
-							<p style="font-size: small">Specify the site URL and price (<b>per switch</b>) on each line, separating values with a pipe: |</p>
-							<p style="font-size: small"><b>Example:</b> http://www.google.com|0.35</p>
-							<textarea class="form-control" id="sitesandprices" rows="8" v-model="switchData.listings"></textarea>
+							<p v-for="listing in switchData.listings" :key="listing.listing_id" scope="listing.listing_id">
+								<span class="badge bg-primary">${{ listing.price }}</span> <a :href="listing.url">{{ listing.url }}</a>
+							</p>
 						</div>
 						<div class="tab-pane fade" id="references" role="tabpanel" aria-labelledby="references-tab">
 							<label for="referencestext" class="form-label">References</label>
@@ -127,12 +126,12 @@ export default {
 	beforeMount() {
 		const self = this;
 		const switchId = this.$route.query.switch_id;
-		var searchUrl = 'http://localhost:8081/api/search?switch_id=' + switchId;
+		var searchUrl = 'http://localhost:8081/api/switch/' + switchId;
 		fetch(searchUrl)
 		.then(res => res.json())
 		.then(data => {
 			console.log('loading!');
-			self.switchData = data[0];
+			self.switchData = data;
 			this.parsePurchasingData();
 		});
 	}
