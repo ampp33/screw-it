@@ -38,7 +38,12 @@
 								<div class="input-column">
 									<div class="input-group">
 										<label for="name" class="col-form-label">Name</label>
-										<input type="text" class="form-control" id="name" v-model="switchData.name">
+										<SimpleTypeahead
+											id="name"
+											:items="acSwitchNames"
+											:minInputLength="1"
+											v-model="switchData.name">
+										</SimpleTypeahead>
 									</div>
 									<div class="input-group">
 										<label for="series" class="col-form-label">Series</label>
@@ -46,7 +51,13 @@
 									</div>
 									<div class="input-group">
 										<label for="manufacturer" class="col-form-label">Manufacturer</label>
-										<input type="text" class="form-control" id="manufacturer" v-model="switchData.manufacturer">
+										<SimpleTypeahead
+											id="manufacturer"
+											:items="acManufacturers"
+											:minInputLength="1"
+											@selectItem="manuSelected"
+											@onInput="manuInput">
+										</SimpleTypeahead>
 									</div>
 									<div class="input-group">
 										<label for="type" class="col-form-label">Type</label>
@@ -137,9 +148,14 @@
 </template>
 
 <script>
+// https://vuejsexamples.com/a-simple-vue3-typeahead-component-that-show-a-suggested-list-of-elements-while-the-user-types-in/
+import SimpleTypeahead from 'vue3-simple-typeahead'
+import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
+
 export default {
 	name: 'App',
 	components: {
+		SimpleTypeahead
 	},
 	data() {
 		return {
@@ -159,10 +175,31 @@ export default {
 				'Blend',
 				'Proprietary',
 				'Other'
-			]
+			],
+			countries: [ 'USA', 'Canada', 'China', 'Mexico'],
+			autocompleteData: {},
+			acManufacturers: [],
+			acSwitchNames: []
 		}
 	},
 	methods: {
+		applyManuAcSwitchFilter(manu) {
+			if(manu) {
+				if(manu in this.autocompleteData) {
+					this.acSwitchNames = this.autocompleteData[manu];
+				} else {
+					this.acSwitchNames = [];
+				}
+			}
+		},
+		manuSelected(input) {
+      this.applyManuAcSwitchFilter(input);
+			this.switchData.manufacturer = input;
+    },
+		manuInput(event) {
+			this.applyManuAcSwitchFilter(event.input);
+			this.switchData.manufacturer = event.input;
+		},
 		fileSpecified(event) {
 			var files = event.target.files || event.dataTransfer.files;
 			if (!files.length)
@@ -257,6 +294,21 @@ export default {
 				// TODO show some sort of error and stop processing
 			});
 		}
+	},
+	beforeMount() {
+		const self = this;
+		fetch('http://localhost:8081/api/autocomplete')
+		.then(response => response.json())
+		.then(data => {
+			self.autocompleteData = data;
+			for(const manu in data) {
+				self.acManufacturers.push(manu);
+			}
+		})
+		.catch(error => {
+			console.log(error);
+			// TODO show some sort of error and stop processing
+		});
 	}
 }
 </script>
